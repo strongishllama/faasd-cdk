@@ -7,7 +7,7 @@ export interface DeployStackProps extends cdk.StackProps {
 }
 
 export class DeployStack extends cdk.Stack {
-  constructor(scope: cdk.Stack, id: string, props: DeployStackProps) {
+  constructor(scope: cdk.Construct, id: string, props: DeployStackProps) {
     super(scope, id, props);
 
     const vpc = ec2.Vpc.fromLookup(this, 'vpc', {

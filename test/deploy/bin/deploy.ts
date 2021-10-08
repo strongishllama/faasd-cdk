@@ -7,8 +7,8 @@ const app = new cdk.App();
 
 new DeployStack(app, 'faasd-test-deploy-stack', {
   env: {
-    account: '',
+    account: '320045747480',
     region: 'ap-southeast-2'
   },
-  vpcId: ''
+  vpcId: 'vpc-1e217c79'
 });

@@ -1,5 +1,6 @@
 import * as cdk from '@aws-cdk/core';
 import * as ec2 from '@aws-cdk/aws-ec2';
+import * as iam from '@aws-cdk/aws-iam';
 
 export interface FaasdProps {
   readonly vpc: ec2.IVpc;
@@ -16,7 +17,13 @@ export class Faasd extends cdk.Construct {
       vpc: props.vpc,
       securityGroup: props.securityGroup,
       instanceType: ec2.InstanceType.of(props.instanceClass ?? ec2.InstanceClass.T3A, props.instanceSize ?? ec2.InstanceSize.NANO),
-      machineImage: ec2.MachineImage.genericLinux({ 'ap-southeast-2': 'ami-0567f647e75c7bc05' })
+      machineImage: ec2.MachineImage.genericLinux({ 'ap-southeast-2': 'ami-0567f647e75c7bc05' }),
+      role: new iam.Role(this, 'role', {
+        assumedBy: new iam.ServicePrincipal('ec2.amazonaws.com'),
+        managedPolicies: [
+          iam.ManagedPolicy.fromManagedPolicyArn(this, 'ssm-policy', 'arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore')
+        ]
+      })
     });
   }
 }
