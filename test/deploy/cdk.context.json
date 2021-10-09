@@ -33,5 +33,9 @@
   "hosted-zone:account=320045747480:domainName=millhouse.dev:region=ap-southeast-2": {
     "Id": "/hostedzone/Z00084772BE3Q42PKEDZF",
     "Name": "millhouse.dev."
+  },
+  "hosted-zone:account=320045747480:domainName=opencrm.dev:region=ap-southeast-2": {
+    "Id": "/hostedzone/Z0176744KIFOV2W5XWQT",
+    "Name": "opencrm.dev."
   }
 }

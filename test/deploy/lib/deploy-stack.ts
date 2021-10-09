@@ -12,8 +12,8 @@ export class DeployStack extends cdk.Stack {
 
     new faasd.Instance(this, 'faasd', {
       env: props.env,
-      baseDomainName: 'millhouse.dev',
-      fullDomainName: 'faasd.millhouse.dev',
+      baseDomainName: 'opencrm.dev',
+      fullDomainName: 'faasd.opencrm.dev',
       emailAddress: 'taliesinwrmillhouse@gmail.com',
       vpc: ec2.Vpc.fromLookup(this, 'vpc', {
         vpcId: props.vpcId

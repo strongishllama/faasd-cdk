@@ -113,47 +113,56 @@ export class Instance extends cdk.Construct {
       'apt autoclean',
       'apt autoremove -y',
       // Installing dependencies.
-      'apt install -qy runc bridge-utils make',
+      'apt install runc bridge-utils make unzip debian-keyring debian-archive-keyring apt-transport-https -y',
       // Installing the AWS CLI.
-      'echo "Installing the AWS CLI"',
       'curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "aws-cli-v2.zip"',
       'unzip aws-cli-v2.zip',
       './aws/install',
       'rm aws-cli-v2.zip',
       'rm -rf aws',
       // Installing Containerd.
-      'curl -sLSf https://github.com/containerd/containerd/releases/download/v1.5.4/containerd-1.5.4-linux-amd64.tar.gz > /tmp/containerd.tar.gz && tar -xvf /tmp/containerd.tar.gz -C /usr/local/bin/ --strip-components=1',
-      'curl -SLfs https://raw.githubusercontent.com/containerd/containerd/v1.5.4/containerd.service | tee /etc/systemd/system/containerd.service',
-      'systemctl daemon-reload && systemctl start containerd',
+      'sudo apt install containerd -y',
+    //   'curl -sLSf https://github.com/containerd/containerd/releases/download/v1.5.4/containerd-1.5.4-linux-amd64.tar.gz > /tmp/containerd.tar.gz && tar -xvf /tmp/containerd.tar.gz -C /usr/local/bin/ --strip-components=1',
+    //   'curl -SLfs https://raw.githubusercontent.com/containerd/containerd/v1.5.4/containerd.service | tee /etc/systemd/system/containerd.service',
+    //   'systemctl daemon-reload && systemctl start containerd',
       '/sbin/sysctl -w net.ipv4.conf.all.forwarding=1',
       // Installing CNI.
       'mkdir -p /opt/cni/bin',
       'curl -sSL https://github.com/containernetworking/plugins/releases/download/v0.8.5/cni-plugins-linux-amd64-v0.8.5.tgz | tar -xz -C /opt/cni/bin',
       // Installing OpenFaas.
-      'mkdir -p /go/src/github.com/openfaas/',
-      'mkdir -p /var/lib/faasd/secrets/',
+      'mkdir -p /go/src/github.com/openfaas',
+      'mkdir -p /var/lib/faasd/secrets',
       `echo $(aws secretsmanager get-secret-value --secret-id ${passwordSecret.secretName} --query SecretString --output text) > /var/lib/faasd/secrets/basic-auth-password`,
       'echo admin > /var/lib/faasd/secrets/basic-auth-user',
       // Installing Faasd.
-      'cd /go/src/github.com/openfaas/ && git clone --depth 1 --branch 0.13.0 https://github.com/openfaas/faasd',
-      'curl -fSLs "https://github.com/openfaas/faasd/releases/download/0.13.0/faasd" --output "/usr/local/bin/faasd" && chmod a+x "/usr/local/bin/faasd"',
-      'cd /go/src/github.com/openfaas/faasd/ && /usr/local/bin/faasd install',
+      'cd /go/src/github.com/openfaas',
+      'git clone --depth 1 --branch 0.13.0 https://github.com/openfaas/faasd',
+      'curl -fSLs "https://github.com/openfaas/faasd/releases/download/0.13.0/faasd" --output "/usr/local/bin/faasd"',
+      'chmod a+x "/usr/local/bin/faasd"',
+      'cd /go/src/github.com/openfaas/faasd',
+      '/usr/local/bin/faasd install',
       // Checking status'
-      'systemctl status -l containerd --no-pager',
-      'journalctl -u faasd-provider --no-pager',
-      'systemctl status -l faasd-provider --no-pager',
-      'systemctl status -l faasd --no-pager',
+    //   'systemctl status -l containerd --no-pager',
+    //   'journalctl -u faasd-provider --no-pager',
+    //   'systemctl status -l faasd-provider --no-pager',
+    //   'systemctl status -l faasd --no-pager',
       // Installing OpenFaas CLI.
-      'curl -sSLf https://cli.openfaas.com | sh',
-      'sleep 5 && journalctl -u faasd --no-pager',
+    //   'curl -sSLf https://cli.openfaas.com | sh',
+    //   'sleep 5 && journalctl -u faasd --no-pager',
       // Installing Caddy.
       'mkdir -p /etc/caddy',
+      `curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo tee /etc/apt/trusted.gpg.d/caddy-stable.asc`,
+      `curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list`,
+      'apt update',
+      'apt install caddy -y',
       `echo "${handlebars.compile(fs.readFileSync(path.join(__dirname, 'assets/Caddyfile')).toString())(props)}" > /etc/caddy/Caddyfile`,
-      'wget https://github.com/caddyserver/caddy/releases/download/v2.1.1/caddy_2.1.1_linux_amd64.tar.gz -O /tmp/caddy.tar.gz && tar -zxvf /tmp/caddy.tar.gz -C /usr/bin/ caddy',
-      'wget https://raw.githubusercontent.com/caddyserver/dist/master/init/caddy.service -O /etc/systemd/system/caddy.service',
-      'systemctl daemon-reload',
-      'systemctl enable caddy',
-      'systemctl start caddy'
+      'cd /etc/caddy',
+      'caddy reload'
+    //   // 'wget https://github.com/caddyserver/caddy/releases/download/v2.1.1/caddy_2.1.1_linux_amd64.tar.gz -O /tmp/caddy.tar.gz && tar -zxvf /tmp/caddy.tar.gz -C /usr/bin/ caddy',
+    //   // 'wget https://raw.githubusercontent.com/caddyserver/dist/master/init/caddy.service -O /etc/systemd/system/caddy.service',
+    //   // 'systemctl daemon-reload',
+    //   // 'systemctl enable caddy',
+    //   // 'systemctl start caddy'
     ]);
   }
 }
