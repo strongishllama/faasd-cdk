@@ -7,7 +7,15 @@ import * as route53 from '@aws-cdk/aws-route53';
 import * as secretsmanager from '@aws-cdk/aws-secretsmanager';
 import * as handlebars from 'handlebars';
 
-export interface InstanceProps extends cdk.StackProps {
+export interface InstanceProps {
+  /**
+   * The number of the AWS account being deployed into.
+   */
+  readonly account: string;
+  /**
+   * The region being deployed into.
+   */
+  readonly region: string;
   /**
    * The base domain to use. This domain must have a hosted zone in Route53.
    */
@@ -36,7 +44,7 @@ export interface InstanceProps extends cdk.StackProps {
   /**
    * The size of the EC2 instance being deployed.
    *
-   * @default ec2.InstanceSize.NANO
+   * @default ec2.InstanceSize.MICRO
    */
   readonly instanceSize?: ec2.InstanceSize;
 }
@@ -44,11 +52,6 @@ export interface InstanceProps extends cdk.StackProps {
 export class Instance extends cdk.Construct {
   constructor(scope: cdk.Construct, id: string, props: InstanceProps) {
     super(scope, id);
-
-    // Check that the correct props have been set.
-    if (props.env === undefined || props.env.account === undefined || props.env.region === undefined) {
-      throw new Error('FaasdProps.env property must be fully defined');
-    }
 
     // Create the security group.
     const securityGroup = new ec2.SecurityGroup(this, 'security-group', {
@@ -63,7 +66,7 @@ export class Instance extends cdk.Construct {
     const instance = new ec2.Instance(this, 'instance', {
       vpc: props.vpc,
       securityGroup: securityGroup,
-      instanceType: ec2.InstanceType.of(props.instanceClass ?? ec2.InstanceClass.T3A, props.instanceSize ?? ec2.InstanceSize.NANO),
+      instanceType: ec2.InstanceType.of(props.instanceClass ?? ec2.InstanceClass.T3A, props.instanceSize ?? ec2.InstanceSize.MICRO),
       machineImage: ec2.MachineImage.genericLinux({ 'ap-southeast-2': 'ami-0567f647e75c7bc05' }),
       role: new iam.Role(this, 'role', {
         assumedBy: new iam.ServicePrincipal('ec2.amazonaws.com'),
@@ -97,10 +100,6 @@ export class Instance extends cdk.Construct {
       removalPolicy: cdk.RemovalPolicy.DESTROY
     });
     passwordSecret.grantRead(instance);
-    new cdk.CfnOutput(this, 'password-secret-name', {
-      value: `https://${props.env.region}.console.aws.amazon.com/secretsmanager/home?region=${props.env.region}#!/secret?name=${passwordSecret.secretName}`,
-      exportName: 'password-secret'
-    });
 
     // Add the instance user data.
     instance.addUserData(...[
@@ -122,9 +121,6 @@ export class Instance extends cdk.Construct {
       'rm -rf aws',
       // Installing Containerd.
       'sudo apt install containerd -y',
-    //   'curl -sLSf https://github.com/containerd/containerd/releases/download/v1.5.4/containerd-1.5.4-linux-amd64.tar.gz > /tmp/containerd.tar.gz && tar -xvf /tmp/containerd.tar.gz -C /usr/local/bin/ --strip-components=1',
-    //   'curl -SLfs https://raw.githubusercontent.com/containerd/containerd/v1.5.4/containerd.service | tee /etc/systemd/system/containerd.service',
-    //   'systemctl daemon-reload && systemctl start containerd',
       '/sbin/sysctl -w net.ipv4.conf.all.forwarding=1',
       // Installing CNI.
       'mkdir -p /opt/cni/bin',
@@ -141,14 +137,6 @@ export class Instance extends cdk.Construct {
       'chmod a+x "/usr/local/bin/faasd"',
       'cd /go/src/github.com/openfaas/faasd',
       '/usr/local/bin/faasd install',
-      // Checking status'
-    //   'systemctl status -l containerd --no-pager',
-    //   'journalctl -u faasd-provider --no-pager',
-    //   'systemctl status -l faasd-provider --no-pager',
-    //   'systemctl status -l faasd --no-pager',
-      // Installing OpenFaas CLI.
-    //   'curl -sSLf https://cli.openfaas.com | sh',
-    //   'sleep 5 && journalctl -u faasd --no-pager',
       // Installing Caddy.
       'mkdir -p /etc/caddy',
       `curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo tee /etc/apt/trusted.gpg.d/caddy-stable.asc`,
@@ -158,11 +146,17 @@ export class Instance extends cdk.Construct {
       `echo "${handlebars.compile(fs.readFileSync(path.join(__dirname, 'assets/Caddyfile')).toString())(props)}" > /etc/caddy/Caddyfile`,
       'cd /etc/caddy',
       'caddy reload'
-    //   // 'wget https://github.com/caddyserver/caddy/releases/download/v2.1.1/caddy_2.1.1_linux_amd64.tar.gz -O /tmp/caddy.tar.gz && tar -zxvf /tmp/caddy.tar.gz -C /usr/bin/ caddy',
-    //   // 'wget https://raw.githubusercontent.com/caddyserver/dist/master/init/caddy.service -O /etc/systemd/system/caddy.service',
-    //   // 'systemctl daemon-reload',
-    //   // 'systemctl enable caddy',
-    //   // 'systemctl start caddy'
     ]);
+
+    // Output the important values.
+    new cdk.CfnOutput(this, 'a-record-url', {
+      value: `https://${props.fullDomainName ?? props.baseDomainName}`
+    });
+    new cdk.CfnOutput(this, 'username', {
+      value: 'admin'
+    });
+    new cdk.CfnOutput(this, 'password-secret-url', {
+      value: `https://${props.region}.console.aws.amazon.com/secretsmanager/home?region=${props.region}#!/secret?name=${passwordSecret.secretName}`
+    });
   }
 }
