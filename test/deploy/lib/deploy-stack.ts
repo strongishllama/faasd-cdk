@@ -4,7 +4,7 @@ import * as faasd from '../../../lib';
 
 export interface DeployStackProps extends cdk.StackProps {
   readonly baseDomainName: string;
-  readonly fullDomainName: string;
+  readonly fullDomainName?: string;
   readonly emailAddress: string;
   readonly vpcId: string;
 }

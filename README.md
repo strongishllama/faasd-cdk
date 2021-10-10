@@ -12,7 +12,12 @@ Install this package with the following command.
 npm install @strongishllama/faasd-cdk
 ```
 
-Add the construct to your CDK stack, filling out the properties.
+Add the import at the top of your ```.ts``` file.
+```ts
+import * as faasd from '@strongishllama/faasd-cdk';
+```
+
+Then add the construct to your CDK stack, filling out the properties.
 ```ts
 new faasd.Instance(this, 'faasd-instance', {
   account: '0123456789',
