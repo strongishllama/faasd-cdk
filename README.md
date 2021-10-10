@@ -12,7 +12,7 @@ Install this package with the following command.
 npm install @strongishllama/faasd-cdk
 ```
 
-Add the construct to your CDK stack, filling out the properties. Both the account and region property are required.
+Add the construct to your CDK stack, filling out the properties.
 ```ts
 new faasd.Instance(this, 'faasd-instance', {
   account: '0123456789',
