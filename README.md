@@ -20,14 +20,14 @@ import * as faasd from '@strongishllama/faasd-cdk';
 Then add the construct to your CDK stack, filling out the properties.
 ```ts
 new faasd.Instance(this, 'faasd-instance', {
-  account: '0123456789',
   region: 'ap-southeast-2',
   baseDomainName: 'example.com',
   fullDomainName: 'faasd.example.com',
   emailAddress: 'webmaster@example.com',
   vpc: ec2.Vpc.fromLookup(this, 'vpc', {
     vpcId: 'vpc-123456'
-  })
+  }),
+  amiId: 'ami-123456'
 });
 ```
 
