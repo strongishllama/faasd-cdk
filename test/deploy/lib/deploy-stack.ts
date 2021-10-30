@@ -18,14 +18,21 @@ export class DeployStack extends cdk.Stack {
     }
 
     new faasd.Instance(this, 'faasd', {
-      account: props.env.account,
       region: props.env.region,
       baseDomainName: props.baseDomainName,
       fullDomainName: props.fullDomainName,
       emailAddress: props.emailAddress,
-      vpc: ec2.Vpc.fromLookup(this, 'vpc', {
-        vpcId: props.vpcId
-      })
+      vpc: new ec2.Vpc(this, 'vpc', {
+        cidr: '10.0.0.0/16',
+        subnetConfiguration: [
+          {
+            cidrMask: 24,
+            name: 'ingress',
+            subnetType: ec2.SubnetType.PUBLIC
+          }
+        ]
+      }),
+      amiId: 'ami-0567f647e75c7bc05'
     });
   }
 }

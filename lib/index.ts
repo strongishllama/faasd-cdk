@@ -9,10 +9,6 @@ import * as handlebars from 'handlebars';
 
 export interface InstanceProps {
   /**
-   * The number of the AWS account being deployed into.
-   */
-  readonly account: string;
-  /**
    * The region being deployed into.
    */
   readonly region: string;
@@ -47,6 +43,10 @@ export interface InstanceProps {
    * @default ec2.InstanceSize.MICRO
    */
   readonly instanceSize?: ec2.InstanceSize;
+  /**
+   * The ID of the AMI to use when deploying your instance.
+   */
+  readonly amiId: string;
 }
 
 export class Instance extends cdk.Construct {
@@ -67,7 +67,7 @@ export class Instance extends cdk.Construct {
       vpc: props.vpc,
       securityGroup: securityGroup,
       instanceType: ec2.InstanceType.of(props.instanceClass ?? ec2.InstanceClass.T3A, props.instanceSize ?? ec2.InstanceSize.MICRO),
-      machineImage: ec2.MachineImage.genericLinux({ 'ap-southeast-2': 'ami-0567f647e75c7bc05' }),
+      machineImage: ec2.MachineImage.genericLinux({ [props.region] : props.amiId }),
       role: new iam.Role(this, 'role', {
         assumedBy: new iam.ServicePrincipal('ec2.amazonaws.com'),
         managedPolicies: [

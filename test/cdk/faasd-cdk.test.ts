@@ -15,14 +15,14 @@ test('Instance', () => {
 
   // WHEN
   const props: faasd.InstanceProps = {
-    account: env.account,
     region: env.region,
     baseDomainName: 'example.com',
     fullDomainName: 'faasd.example.com',
     emailAddress: 'webmaster@example.com',
     vpc: ec2.Vpc.fromLookup(stack, 'vpc', {
       vpcId: 'vpc-123456'
-    })
+    }),
+    amiId: 'ami-0567f647e75c7bc05'
   };
   new faasd.Instance(stack, 'instance', props);
 
@@ -105,7 +105,7 @@ test('Instance', () => {
   }));
   // Instance.
   assert.expect(stack).to(assert.countResourcesLike('AWS::EC2::Instance', 1, {
-    'ImageId': 'ami-0567f647e75c7bc05',
+    'ImageId': props.amiId,
     'InstanceType': `${props.instanceClass ?? 't3a'}.${props.instanceSize ?? 'micro'}`,
     'SecurityGroupIds': [
       {
